@@ -1,12 +1,12 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 import os
-import pytz
 from typing import Union
+from zoneinfo import ZoneInfo
 
 from dateutil import parser as dt_parser
 
 
-epoch = datetime(1970, 1, 1, tzinfo=pytz.utc)
+epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
 
 def parse_datetime(value: Union[str, datetime]) -> datetime:
@@ -44,7 +44,7 @@ def file_modified_since(filepath: str, last_time: datetime) -> bool:
 
 
 def as_timezone(value, timezone):
-    return value.astimezone(pytz.timezone(timezone))
+    return value.astimezone(ZoneInfo(timezone))
 
 
 class DateTimeFormatterException(ValueError):
@@ -224,7 +224,7 @@ class DateTimeFormatter:
     def extract_iso_timestamp(timestamp_str, timezone, force_tz: bool = False):
         timestamp = datetime.fromisoformat(timestamp_str)
         if not timestamp.tzinfo and timezone:
-            timestamp = timestamp.replace(tzinfo=pytz.timezone(timezone))
+            timestamp = timestamp.replace(tzinfo=ZoneInfo(timezone))
         if force_tz:
             timestamp = as_timezone(timestamp, timezone)
         return timestamp
@@ -232,7 +232,7 @@ class DateTimeFormatter:
     @staticmethod
     def extract_timestamp(timestamp_str, dt_format, timezone, force_tz: bool = False):
         timestamp = datetime.strptime(timestamp_str, dt_format)
-        timestamp = timestamp.replace(tzinfo=pytz.timezone(timezone))
+        timestamp = timestamp.replace(tzinfo=ZoneInfo(timezone))
         if force_tz:
             timestamp = as_timezone(timestamp, timezone)
         return timestamp

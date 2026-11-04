@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest import TestCase
 
 from clipped.utils.dates import DateTimeFormatter, DateTimeFormatterException
@@ -85,6 +85,28 @@ class TestDateTimeFormatter(TestCase):
         self.assertEqual(result.hour, 16)
         self.assertEqual(result.minute, 17)
         self.assertEqual(result.second, 18)
+
+    def test_extract_applies_the_timezone_offset(self):
+        result = DateTimeFormatter.extract_iso_timestamp(
+            "2012-12-24 16:17:18", timezone="Europe/Berlin"
+        )
+        self.assertEqual(result.utcoffset(), timedelta(hours=1))
+
+        result = DateTimeFormatter.extract_iso_timestamp(
+            "2012-06-24 16:17:18", timezone="Europe/Berlin"
+        )
+        self.assertEqual(result.utcoffset(), timedelta(hours=2))
+
+        result = DateTimeFormatter.extract_timestamp(
+            "2012-12-24", DateTimeFormatter.DATE_FORMAT, timezone="Europe/Berlin"
+        )
+        self.assertEqual(result.utcoffset(), timedelta(hours=1))
+
+        result = DateTimeFormatter.extract_datetime(
+            "2012-12-24 16:17:18", timezone="Europe/Berlin", force_tz=True
+        )
+        self.assertEqual(result.hour, 16)
+        self.assertEqual(result.utcoffset(), timedelta(hours=1))
 
     def test_extract_accepts_raises_for_none(self):
         with self.assertRaises(DateTimeFormatterException):

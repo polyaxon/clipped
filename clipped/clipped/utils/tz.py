@@ -1,6 +1,6 @@
-from datetime import datetime, timedelta
-import pytz
+from datetime import datetime, timedelta, timezone
 from typing import Optional
+from zoneinfo import ZoneInfo
 
 from dateutil.tz import tzlocal
 
@@ -13,7 +13,7 @@ except ImportError:
 
 def get_timezone(tz: Optional[str] = None):
     if tz:
-        return pytz.timezone(tz)
+        return ZoneInfo(tz)
     return tzlocal()
 
 
@@ -29,7 +29,7 @@ def now(tzinfo=True, no_micor=False):
             pass
     if not value:
         if tzinfo:
-            value = datetime.utcnow().replace(tzinfo=pytz.utc)
+            value = datetime.now(timezone.utc)
         else:
             value = datetime.now()
     if no_micor:
