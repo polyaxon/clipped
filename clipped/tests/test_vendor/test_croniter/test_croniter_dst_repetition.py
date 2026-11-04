@@ -4,19 +4,12 @@ All related DST croniter tests are isolated here.
 """
 # -*- coding: utf-8 -*-
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-
 from datetime import datetime
 import os
 import time
+import unittest
 
-from clipped._vendor.croniter import (
-    cron_m,
-    croniter,
-)
+from clipped._vendor.croniter import cron_m, croniter
 from tests.test_vendor.test_croniter import base
 
 

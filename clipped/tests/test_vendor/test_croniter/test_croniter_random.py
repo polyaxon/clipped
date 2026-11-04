@@ -1,9 +1,5 @@
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-
 from datetime import datetime, timedelta
+import unittest
 
 from clipped._vendor.croniter import croniter
 from tests.test_vendor.test_croniter import base

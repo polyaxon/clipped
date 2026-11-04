@@ -1,18 +1,10 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function
-
-
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
 
 from datetime import datetime
 import os
-import pytz
-import sys
 from timeit import Timer
+import unittest
+import zoneinfo
 
 from clipped._vendor.croniter import croniter
 from tests.test_vendor.test_croniter import base
@@ -91,7 +83,7 @@ class CroniterSpeedTest(base.TestCase):
             itr.get_prev(datetime)
 
         # dst regression test
-        tz = pytz.timezone("Europe/Bucharest")
+        tz = zoneinfo.ZoneInfo("Europe/Bucharest")
         offsets = set()
         dst_cron = "15 0,3 * 3 *"
         dst_iters = int(2 * 31 * (iterations / 40))
@@ -105,9 +97,17 @@ class CroniterSpeedTest(base.TestCase):
             d = itr.get_prev(datetime)
             offsets.add(d.utcoffset())
 
+    def test_large_comma_list_expands_quickly(self):
+        # Regression: a long comma list of ranges used to expand in O(n^2)
+        # because every expanded value was de-duplicated against the whole
+        # pending list. ~20k groups took minutes; it now finishes instantly
+        # and yields the same result as a single range.
+        expr = ",".join(["0-30"] * 20000) + " * * * *"
+        elapsed = Timer(lambda: croniter.expand(expr)).timeit(1)
+        self.assertLess(elapsed, 10, f"comma-list expansion too slow ({elapsed}s)")
+        self.assertEqual(croniter.expand(expr)[0][0], list(range(31)))
+
     def test_not_long_time(self):
-        if int(sys.version[0]) < 3:
-            return
         iterations = int(os.environ.get("CRONITER_TEST_SPEED_ITERATIONS", "40"))
         globs = globals()
         globs.update(locals())
@@ -115,8 +115,7 @@ class CroniterSpeedTest(base.TestCase):
         limit = 80
         ret = t.timeit(limit)
         self.assertTrue(
-            ret < limit,
-            "Regression in croniter speed detected ({0} {1}).".format(ret, limit),
+            ret < limit, f"Regression in croniter speed detected ({ret} {limit})."
         )
 
 
