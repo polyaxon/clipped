@@ -5,13 +5,19 @@ import uuid
 
 from dateutil.tz import tzutc
 
-from clipped.compact.pydantic import PYDANTIC_VERSION, StrictInt, StrictStr
+from clipped.compact.pydantic import (
+    PYDANTIC_VERSION,
+    StrictInt,
+    StrictStr,
+    ValidationError,
+)
 from clipped.config.constants import NO_VALUE_FOUND
 from clipped.config.exceptions import SchemaError
 from clipped.config.parser import ConfigParser
 from clipped.types import GcsPath, S3Path, Uri, WasbPath
 from clipped.types.docker_image import ImageStr
 from clipped.types.lists import ListStr
+from clipped.types.ref_or_obj import RefField
 from clipped.types.uuids import UUIDStr
 
 
@@ -993,8 +999,19 @@ class TestConfigParser(TestCase):
         with self.assertRaises(SchemaError):
             get_uuid(key="uuid_key", value=value)
 
+    def test_get_ref_field(self):
+        for value in ("{{ value }}", "{{ value\n | default('fallback') }}"):
+            with self.subTest(value=value):
+                assert ConfigParser.parse_obj_as(RefField, value) == value
+
+        with self.assertRaises(ValidationError):
+            ConfigParser.parse_obj_as(RefField, "plain\nvalue")
+
     def test_get_image_init(self):
         get_image_init = ConfigParser.parse(ImageStr)
+        template = "{{ image\n | default('busybox') }}"
+        assert get_image_init(key="image", value=template) == template
+
         value = get_image_init(key="dict_key_1", value="foo")
         self.assertEqual(value, "foo")
 
