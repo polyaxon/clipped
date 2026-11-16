@@ -8,7 +8,7 @@ from clipped.compact.pydantic import (
     StrictStr,
     strict_str_validator,
 )
-from clipped.config.constants import PARAM_REGEX
+from clipped.utils.strings import is_template_ref
 
 
 if TYPE_CHECKING:
@@ -46,8 +46,7 @@ class RefField(StrictStr):
         if not isinstance(value, str):
             return value
 
-        param = PARAM_REGEX.search(value)
-        if not param:  # TODO: Fix error message
+        if not is_template_ref(value):  # TODO: Fix error message
             raise ValueError(f"Value must be a reference, received `{value}` instead.")
         return value
 

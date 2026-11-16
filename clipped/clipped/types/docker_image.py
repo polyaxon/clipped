@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from clipped.compact.pydantic import PYDANTIC_VERSION
-from clipped.config.constants import PARAM_REGEX
+from clipped.utils.strings import is_template_ref
 
 
 if TYPE_CHECKING:
@@ -19,8 +19,7 @@ def validate_image(image, allow_none=False):
         image = image.get("name")
     if not isinstance(image, str):
         raise TypeError("Image value should be a string")
-    param = PARAM_REGEX.search(image)
-    if param:
+    if is_template_ref(image):
         return image
     if " " in image:
         raise ValueError("Invalid docker image `{}`".format(image))

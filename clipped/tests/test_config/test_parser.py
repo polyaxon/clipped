@@ -12,6 +12,7 @@ from clipped.config.parser import ConfigParser
 from clipped.types import GcsPath, S3Path, Uri, WasbPath
 from clipped.types.docker_image import ImageStr
 from clipped.types.lists import ListStr
+from clipped.types.ref_or_obj import RefField
 from clipped.types.uuids import UUIDStr
 
 
@@ -1012,6 +1013,9 @@ class TestConfigParser(TestCase):
         value = get_image_init(key="dict_key_1", value="https://registry.com/foo:bar")
         self.assertEqual(value, "https://registry.com/foo:bar")
 
+        value = get_image_init(key="dict_key_1", value="{{ image }}")
+        self.assertEqual(value, "{{ image }}")
+
         with self.assertRaises(SchemaError):
             get_image_init(
                 key="dict_key_1", value='{"name": "https://registry.com/foo:bar"}'
@@ -1089,3 +1093,17 @@ class TestConfigParser(TestCase):
             get_image_init(key="dict_non_existing_key", value=None, is_optional=True),
             None,
         )
+
+    def test_ref_field(self):
+        for value in ["{{ value }}", "{{value}}", "a {{ b }} c"]:
+            self.assertEqual(RefField.validate(value), value)
+
+        for value in [
+            "{{}}",
+            "plain",
+            "value }}",
+            "{{" + " " * 100_000,
+            "{{" * 50_000,
+        ]:
+            with self.assertRaises(ValueError):
+                RefField.validate(value)

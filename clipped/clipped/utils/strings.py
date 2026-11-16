@@ -99,6 +99,17 @@ def to_string(v: Any):
     return str(v)
 
 
+def is_template_ref(value: Any) -> bool:
+    """Checks whether value contains `{{ ... }}`.
+
+    String search, not a regex: a regex backtracks on an unclosed `{{`.
+    """
+    if not isinstance(value, str):
+        return False
+    start = value.find("{{")
+    return start != -1 and value.rfind("}}") >= start + 3
+
+
 def validate_file_or_buffer(data: str):
     if data and not os.path.exists(data):
         data = StringIO(data)
